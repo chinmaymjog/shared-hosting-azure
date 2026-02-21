@@ -44,7 +44,7 @@ resource "azurerm_network_security_rule" "web" {
   protocol                     = "Tcp"
   source_port_range            = "*"
   destination_port_ranges      = ["80", "443"]
-  source_address_prefix        = "*"
+  source_address_prefix        = "AzureFrontDoor.Backend"
   destination_address_prefixes = var.snet_web
   resource_group_name          = azurerm_resource_group.hub.name
   network_security_group_name  = azurerm_network_security_group.hub-nsg.name
@@ -296,7 +296,7 @@ resource "azurerm_key_vault" "kv" {
   enabled_for_disk_encryption = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
   soft_delete_retention_days  = 7
-  purge_protection_enabled    = false
+  purge_protection_enabled    = true
   lifecycle {
     ignore_changes = [tags]
   }

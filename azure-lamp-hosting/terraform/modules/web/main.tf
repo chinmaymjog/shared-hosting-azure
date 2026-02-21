@@ -92,7 +92,7 @@ resource "azurerm_network_security_rule" "web" {
   protocol                     = "Tcp"
   source_port_range            = "*"
   destination_port_ranges      = ["80", "443"]
-  source_address_prefix        = "*"
+  source_address_prefix        = "AzureFrontDoor.Backend"
   destination_address_prefixes = var.snet_web
   resource_group_name          = azurerm_resource_group.rg.name
   network_security_group_name  = azurerm_network_security_group.nsg.name
@@ -289,7 +289,7 @@ resource "azurerm_netapp_volume" "netapp_volume" {
 
   export_policy_rule {
     rule_index          = 1
-    allowed_clients     = ["0.0.0.0/0"]
+    allowed_clients     = var.snet_web
     protocols_enabled   = ["NFSv4.1"]
     unix_read_write     = "true"
     root_access_enabled = "true"
