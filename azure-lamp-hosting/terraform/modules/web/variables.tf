@@ -58,10 +58,6 @@ variable "webvm_osdisk" {
   description = "OS disk size for Web VM in GB"
 }
 
-variable "webvm_datadisk" {
-  description = "Data disk size for Web VM in GB"
-}
-
 variable "dbsku" {
   description = "SKU for Azure Database for MySQL"
 }

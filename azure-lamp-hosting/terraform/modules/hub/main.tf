@@ -156,25 +156,6 @@ resource "null_resource" "key_upload" {
   }
 }
 
-resource "azurerm_managed_disk" "data-vm" {
-  name                 = "diskvm${var.p_short}${var.e_short}${var.l_short}"
-  location             = var.location
-  zone                 = var.zone
-  resource_group_name  = azurerm_resource_group.hub.name
-  storage_account_type = "Standard_LRS"
-  create_option        = "Empty"
-  disk_size_gb         = var.bastion_datadisk
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
-resource "azurerm_virtual_machine_data_disk_attachment" "disk-asso-vm" {
-  managed_disk_id    = azurerm_managed_disk.data-vm.id
-  virtual_machine_id = azurerm_linux_virtual_machine.vm.id
-  lun                = "10"
-  caching            = "ReadWrite"
-}
 
 ### Azure Front Door
 resource "azurerm_cdn_frontdoor_profile" "fd" {

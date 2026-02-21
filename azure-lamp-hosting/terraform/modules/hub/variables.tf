@@ -46,10 +46,6 @@ variable "bastion_osdisk" {
   description = "Os disk size for VM in GB"
 }
 
-variable "bastion_datadisk" {
-  description = "Data disk size for VM in GB"
-}
-
 variable "ip_allow" {
   description = "List of IPs to whitelist"
 }

@@ -242,27 +242,6 @@ resource "azurerm_linux_virtual_machine" "web" {
   }
 }
 
-resource "azurerm_managed_disk" "data" {
-  count                = var.webvm_count
-  name                 = "diskweb${var.p_short}${var.e_short}${var.l_short}${count.index}"
-  location             = var.location
-  zone                 = var.zone
-  resource_group_name  = azurerm_resource_group.rg.name
-  storage_account_type = "Standard_LRS"
-  create_option        = "Empty"
-  disk_size_gb         = var.webvm_datadisk
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
-resource "azurerm_virtual_machine_data_disk_attachment" "disk-asso" {
-  count              = var.webvm_count
-  managed_disk_id    = azurerm_managed_disk.data[count.index].id
-  virtual_machine_id = azurerm_linux_virtual_machine.web[count.index].id
-  lun                = "10"
-  caching            = "ReadWrite"
-}
 
 ### Azure Front Door origin
 resource "azurerm_cdn_frontdoor_origin" "origin" {

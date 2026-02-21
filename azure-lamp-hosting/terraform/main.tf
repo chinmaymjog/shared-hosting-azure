@@ -13,7 +13,6 @@ module "hub" {
   vm_user               = var.vm_user
   bastion_size          = var.bastion_size
   bastion_osdisk        = var.bastion_osdisk
-  bastion_datadisk      = var.bastion_datadisk
   ip_allow              = var.ip_allow
   netapp_sku            = var.netapp_sku
   netapp_pool_size_intb = var.netapp_pool_size_intb
@@ -37,7 +36,6 @@ module "preprod-web" {
   webvm_size          = var.webvm_size
   webvm_count         = var.webvm_count
   webvm_osdisk        = var.webvm_osdisk
-  webvm_datadisk      = var.webvm_datadisk
   vm_user             = var.vm_user
   dbsku               = var.dbsku
   dbsize              = var.dbsize
@@ -77,7 +75,6 @@ module "prod-web" {
   webvm_size          = var.webvm_size
   webvm_count         = var.webvm_count
   webvm_osdisk        = var.webvm_osdisk
-  webvm_datadisk      = var.webvm_datadisk
   vm_user             = var.vm_user
   dbsku               = var.dbsku
   dbsize              = var.dbsize

@@ -4,9 +4,6 @@
   become: true
 
   tasks:
-    - name: Create LVM on datadisk
-      ansible.builtin.script: scripts/datadisk_lvm.sh
-
     - name: Running Server Hardening
       ansible.builtin.script: scripts/UbuntuCIS.sh
 

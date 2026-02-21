@@ -52,10 +52,6 @@ variable "bastion_osdisk" {
   description = "Os disk size for VM in GB"
 }
 
-variable "bastion_datadisk" {
-  description = "Data disk size for VM in GB"
-}
-
 variable "netapp_sku" {
   description = "Netapp SKU"
 }
@@ -76,10 +72,6 @@ variable "webvm_count" {
 
 variable "webvm_osdisk" {
   description = "OS disk size for Web VM in GB"
-}
-
-variable "webvm_datadisk" {
-  description = "Data disk size for Web VM in GB"
 }
 
 variable "dbsku" {
