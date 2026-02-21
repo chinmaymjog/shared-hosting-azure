@@ -79,9 +79,10 @@ This project contains a convenient `./deploy.sh` script to streamline Terraform 
    ./deploy.sh apply
    ```
 
-### Automated Execution (GitLab CI/CD)
-If you push code to the `develop` branch of a GitLab repository, the `.gitlab-ci.yml` pipeline will automatically trigger. 
-*Note:* You must add the following variables to your **GitLab CI/CD Project Variables** for this to work:
+### Automated Execution (GitLab CI/CD - Maintainers Only)
+> **Note:** The included `.gitlab-ci.yml` is designed for the project maintainer. If you fall into this category and are pushing to the `develop` branch, the pipeline will automatically trigger. 
+
+*Maintainers Required Variables:*
 - `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID` (Azure Credentials)
 - `SSH_PRIVATE_KEY` and `SSH_PUBLIC_KEY` (The webadmin_rsa keys injected into the Bastion and authorized on the VMs).
 

@@ -4,7 +4,7 @@
 
 This section introduces the Azure infrastructure powering the shared hosting platform. The solution is designed to host multi-tenant PHP applications (e.g., WordPress) on a scalable, secure, and high-performance LAMP stack.
 
-![Architecture Diagram](../images/net_diag.png)
+![Architecture Diagram](./images/net_diag.png)
 
 ---
 
@@ -92,4 +92,4 @@ flowchart TD
 
 ---
 
-🔜 **Next:** [Part 2 – Deploying Infrastructure with Terraform](../terraform/README.md)
+🔜 **Next:** [Part 2 – Deploying Infrastructure with Terraform](./2-Terraform-Deployment.md)

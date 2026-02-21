@@ -18,7 +18,7 @@ In this section, we automate the provisioning of the shared hosting platform’s
 ## 📁 Project Structure
 
 ```bash
-terraform/
+azure-lamp-hosting/terraform/
 ├── modules/
 │   ├── hub/              # Shared components
 │   └── web/              # Environment-specific components
@@ -39,17 +39,13 @@ terraform/
 Set your Azure credentials in the `.env` file:
 
 ```env
-export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
-export ARM_CLIENT_SECRET="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export ARM_TENANT_ID="10000000-0000-0000-0000-000000000000"
-export ARM_SUBSCRIPTION_ID="20000000-0000-0000-0000-000000000000"
+ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
+ARM_CLIENT_SECRET="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+ARM_TENANT_ID="10000000-0000-0000-0000-000000000000"
+ARM_SUBSCRIPTION_ID="20000000-0000-0000-0000-000000000000"
 ```
 
-Then load the environment:
-
-```bash
-source .env
-```
+The `.env` file is automatically detected and loaded by the `deploy.sh` script, so no manual sourcing is required.
 
 > ⚠️ **Important:** Never commit `.env` to version control.
 
@@ -57,7 +53,7 @@ source .env
 
 ## ⚙️ Configure `terraform.tfvars`
 
-Customize your infrastructure by editing the `terraform.tfvars` file. Sample values:
+Customize your infrastructure by editing the `azure-lamp-hosting/terraform/terraform.tfvars` file. Sample values:
 
 ```hcl
 project             = "webhost"
@@ -102,10 +98,10 @@ prod_snet_netapp      = ["10.0.1.128/26"]
 
 ## 🔑 SSH Access – Key Pair
 
-Generate an SSH key pair for VM access:
+The `deploy.sh` script relies on an SSH key pair existing in the terraform directory before it provisions the VMs. Generate it from the root of the project:
 
 ```bash
-ssh-keygen -t rsa -f webadmin_rsa
+ssh-keygen -t rsa -f azure-lamp-hosting/terraform/webadmin_rsa -N ""
 ```
 
 The `webadmin_rsa.pub` file will be injected into VMs during provisioning.
@@ -115,20 +111,17 @@ The `webadmin_rsa.pub` file will be injected into VMs during provisioning.
 ## 🚀 Terraform Deployment Steps
 
 ```bash
-cd terraform
+# From the root of the shared-hosting-azure repository
+# Ensure your local .env file is populated with Azure credentials
 
-# Load credentials
-source .env
-
-# Initialize Terraform
-terraform init
-
-# Review execution plan
-terraform plan
+# (Optional) Review execution plan
+./deploy.sh plan
 
 # Apply infrastructure
-terraform apply
+./deploy.sh apply
 ```
+
+> **Note for Maintainers:** The repository contains a `.gitlab-ci.yml` file. If you are the project maintainer pushing to the `develop` branch, this pipeline will automatically trigger the deployment. End-users cloning this repository should rely on the local `./deploy.sh` script as shown above.
 
 ---
 
@@ -166,7 +159,7 @@ PreProduction Load Balancer IP = 52.172.195.226
 
 > 📁 A `hosts` file will also be generated—this is your **Ansible inventory**.
 >
-> **Link to Automation**: Once provisioned, copy the generated `hosts` and `webadmin_rsa` files to your [jenkins-ansible](https://github.com/chinmaymjog/jenkins-ansible) project.
+> **Link to Automation**: Once provisioned, Azure will expose the public IP for the **Bastion Host**. You will use the generated `webadmin_rsa` key to SSH into the Bastion Host, where the next phase (`ansible-control-plane/`) resides.
 
 ---
 
@@ -194,4 +187,4 @@ All per-environment modules consume outputs from the `hub` module for seamless i
 
 ---
 
-🔜 **Next:** [Part 3: Jenkins-Ansible Configuration Management](https://github.com/chinmaymjog/jenkins-ansible)
+🔜 **Next:** [Part 3: Ansible Configuration Management](./3-Ansible-Playbooks.md)
