@@ -1,0 +1,14 @@
+---
+- name: Server Hardening
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Create LVM on datadisk
+      ansible.builtin.script: scripts/datadisk_lvm.sh
+
+    - name: Running Server Hardening
+      ansible.builtin.script: scripts/UbuntuCIS.sh
+
+    - name: Rebooting server to apply changes
+      ansible.builtin.reboot:

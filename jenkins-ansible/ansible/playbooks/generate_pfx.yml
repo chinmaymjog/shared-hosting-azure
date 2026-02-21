@@ -1,0 +1,41 @@
+---
+- name: upload certificate & generate pfx
+  hosts: localhost
+  vars_files:
+    - var_files/web_vars.yml
+    - var_files/azure_creds.yml
+
+  tasks:
+    - name: Create directory structure if does not exist
+      ansible.builtin.file:
+        path: "{{ CERT_PATH }}/{{ commonName }}"
+        state: directory
+
+    - name: Generate pfx
+      community.crypto.openssl_pkcs12:
+        path: "{{ CERT_PATH }}/{{ commonName }}/{{ commonName }}_{{ csrDate }}.pfx"
+        friendly_name: "{{ commonName }}_{{ csrDate }}"
+        privatekey_path: "{{ CERT_PATH }}/{{ commonName }}/{{ private_key_file }}"
+        certificate_path: "{{ CERT_PATH }}/{{ commonName }}/{{ commonName }}_{{ csrDate }}.crt.pem"
+        other_certificates: "{{ CERT_PATH }}/{{ commonName }}/{{ commonName }}_{{ csrDate }}.ca.pem"
+        state: present
+
+    - name: Azure CLI login using service principal
+      ansible.builtin.shell: |
+        az login --service-principal \
+          --username "{{ azure_credentials.client_id }}" \
+          --password "{{ azure_credentials.client_secret }}" \
+          --tenant "{{ azure_credentials.tenant_id }}"
+      args:
+        executable: /bin/bash
+
+    - name: Upload PFX certificate to Azure Key Vault
+      ansible.builtin.shell: |
+        az keyvault certificate import \
+          --vault-name "{{ azure_keyvault_uri }}" \
+          --name "{{ azure_keyvault_cert_name }}" \
+          --file "{{ CERT_PATH }}/{{ commonName }}/{{ commonName }}_{{ csrDate }}.pfx" \
+          --subscription "{{ azure_credentials.subscription_id }}"
+      when: azure_keyvault_uri is defined
+      args:
+        executable: /bin/bash

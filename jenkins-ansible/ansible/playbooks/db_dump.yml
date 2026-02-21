@@ -1,0 +1,40 @@
+---
+- name: Database dump for specific site
+  hosts: localhost
+  vars_files:
+    - var_files/web_vars.yml
+    - var_files/database_vars.yml
+
+  tasks:
+    - name: Set web_environment-specific database variables
+      set_fact:
+        db_host: "{{ lookup('vars', web_environment).db_host }}"
+        db_port: "{{ lookup('vars', web_environment).db_port | default(3306) }}"
+        db_user: "{{ lookup('vars', web_environment).db_user }}"
+        db_pass: "{{ lookup('vars', web_environment).db_pass }}"
+
+    - name: Set database name
+      delegate_to: localhost
+      delegate_facts: true
+      run_once: true
+      become: false
+      ansible.builtin.shell: |
+        user=$(awk -F'\t' -v s={{ site_url }} '{if ($1==s) print $2}' {{ SITE_LIST_PATH }}/site_index.txt)      
+        echo $user
+      register: site_db
+      when:
+        - site_url != ""
+
+    - name: Site not exists
+      debug:
+        msg: "Database for {{ site_url }} doesn't exists. Hence skipping the below tasks"
+      when: site_db.stdout == ""
+
+    - name: Site exists
+      debug:
+        msg: "Database name for {{ site_url }} is: {{ site_db.stdout }}"
+      when: site_db.stdout != ""
+
+    - name: Take Backup
+      shell: mysqldump --force --opt --skip-lock-tables -h {{ db_host }} -u {{ db_user }}  -p"{{ db_pass }}" --databases {{ site_db.stdout }}| gzip > {{ BACKUP_PATH }}/{{ web_environment }}/{{ site_db.stdout }}_{{ ansible_date_time.date }}.sql.gz
+      when: site_db.stdout != ""

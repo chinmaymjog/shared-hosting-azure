@@ -1,0 +1,16 @@
+<VirtualHost *:80>
+  ServerAdmin support.c4e.infra@michelin.com
+  ServerName {{ site_url }}
+  DocumentRoot {{ DOC_ROOT }}/{{ site_user }}/web
+  DirectoryIndex index.html
+  ErrorLog {{ DOC_ROOT }}/{{ site_user }}/logs/{{ site_user }}-error.log
+  CustomLog {{ DOC_ROOT }}/{{ site_user }}/logs/{{ site_user }}-access.log combined
+
+    <Directory {{ DOC_ROOT }}/{{ site_user }}/web>
+      Options -Indexes -Includes +FollowSymLinks +MultiViews
+      AllowOverride All
+      Order Allow,Deny
+      Allow from all
+      Require all granted
+    </Directory>
+</VirtualHost>

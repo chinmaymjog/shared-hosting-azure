@@ -1,0 +1,10 @@
+[local]
+localhost ansible_connection=local ansible_python_interpreter=/opt/ansible-venv/bin/python3
+
+[production]
+webvm-ubu-shrd01-prod-we-01 ansible_host=10.0.2.7
+webvm-ubu-shrd01-prod-we-02 ansible_host=10.0.2.8
+
+[preproduction]
+webvm-ubu-shrd01-preprod-we-01 ansible_host=10.0.3.10
+webvm-ubu-shrd01-preprod-we-02 ansible_host=10.0.3.11
