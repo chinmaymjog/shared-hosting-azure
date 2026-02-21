@@ -1,0 +1,7 @@
+
+# Terraform generated SSH keys
+webadmin_rsa
+webadmin_rsa.pub
+
+# Env files
+.env

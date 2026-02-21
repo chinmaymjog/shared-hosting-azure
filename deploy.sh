@@ -38,6 +38,14 @@ for var in "${REQUIRED_VARS[@]}"; do
     fi
 done
 
+# Verify SSH Keys exist
+if [ ! -f "${TERRAFORM_DIR}/webadmin_rsa" ] || [ ! -f "${TERRAFORM_DIR}/webadmin_rsa.pub" ]; then
+    echo "ERROR: SSH keys (webadmin_rsa and webadmin_rsa.pub) not found in ${TERRAFORM_DIR}."
+    echo "Please generate them by running:"
+    echo "  ssh-keygen -t rsa -f ${TERRAFORM_DIR}/webadmin_rsa -N \"\""
+    exit 1
+fi
+
 COMMAND=$1
 
 case "$COMMAND" in
