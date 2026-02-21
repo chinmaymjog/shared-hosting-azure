@@ -134,6 +134,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
     disk_size_gb         = var.bastion_osdisk
   }
 
+  custom_data = filebase64("${path.root}/scripts/install_docker.sh")
+
   source_image_reference {
     publisher = "Canonical"
     offer     = "ubuntu-24_04-lts"

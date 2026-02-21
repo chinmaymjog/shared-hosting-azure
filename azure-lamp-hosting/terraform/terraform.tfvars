@@ -10,7 +10,7 @@ ip_allow       = ["152.58.30.50"] # IP(s) to whitelist for access
 ## Hub Environment Configuration
 hub_vnet_space        = ["10.0.0.0/24"]
 hub_snet_web          = ["10.0.0.0/26"]
-bastion_size          = "Standard_B2s" # Bastion VM SKU
+bastion_size          = "Standard_B2ms" # Bastion VM SKU (bumped for AWX Docker)
 bastion_osdisk        = 64             # Bastion OS disk (in GB)
 netapp_sku            = "Standard"     # NetApp Storage SKU
 netapp_pool_size_intb = 1              # NetApp Pool size (in TB)
