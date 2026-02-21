@@ -1,0 +1,40 @@
+image:
+  name: hashicorp/terraform:latest
+  entrypoint:
+    - "/usr/bin/env"
+    - "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+variables:
+  # Instruct Terraform to skip checking if it's running in an interactive terminal
+  TF_IN_AUTOMATION: "true"
+
+stages:
+  - deploy
+  - destroy
+
+before_script:
+  - apk add --no-cache bash
+  - chmod +x deploy.sh
+
+# ==================================================
+# Deploy Infrastructure automatically on 'develop'
+# ==================================================
+deploy_infrastructure:
+  stage: deploy
+  script:
+    - echo "Executing deploy script via CI/CD..."
+    - ./deploy.sh apply
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+# ==================================================
+# Manual Destroy for cleanup
+# ==================================================
+destroy_infrastructure:
+  stage: destroy
+  script:
+    - echo "Executing destroy script via CI/CD..."
+    - ./deploy.sh destroy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+      when: manual
