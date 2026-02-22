@@ -107,8 +107,9 @@ The Bastion VM has automatically installed Docker and is ready to host **Ansible
 2. Inside the Bastion host, download the setup files:
    ```bash
    mkdir -p semaphore && cd semaphore
-   curl -O https://raw.githubusercontent.com/chinmaymjog/shared-hosting-azure/main/ansible-control-plane/docker-compose.yml
-   curl -O https://raw.githubusercontent.com/chinmaymjog/shared-hosting-azure/main/ansible-control-plane/Makefile
+   curl -O https://raw.githubusercontent.com/chinmaymjog/shared-hosting-azure/develop/ansible-control-plane/docker-compose.yml
+   curl -O https://raw.githubusercontent.com/chinmaymjog/shared-hosting-azure/develop/ansible-control-plane/Makefile
+   curl -O https://raw.githubusercontent.com/chinmaymjog/shared-hosting-azure/develop/ansible-control-plane/Dockerfile
    ```
 
 3. Deploy the Semaphore stack:
