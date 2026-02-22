@@ -15,7 +15,7 @@ stages:
 
 before_script:
   - apk add --no-cache bash curl
-  - chmod +x deploy.sh
+  - chmod +x deploy-ci.sh
   - echo "Injecting SSH keys from CI/CD variables..."
   - echo "$SSH_PRIVATE_KEY" > azure-lamp-hosting/terraform/webadmin_rsa
   - echo "$SSH_PUBLIC_KEY" > azure-lamp-hosting/terraform/webadmin_rsa.pub
@@ -28,7 +28,7 @@ plan_infrastructure:
   stage: plan
   script:
     - echo "Executing plan script via CI/CD..."
-    - ./deploy.sh plan
+    - ./deploy-ci.sh plan
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
 
@@ -39,7 +39,7 @@ deploy_infrastructure:
   stage: deploy
   script:
     - echo "Executing deploy script via CI/CD..."
-    - ./deploy.sh apply
+    - ./deploy-ci.sh apply
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
       when: manual
@@ -51,7 +51,7 @@ destroy_infrastructure:
   stage: destroy
   script:
     - echo "Executing destroy script via CI/CD..."
-    - ./deploy.sh destroy
+    - ./deploy-ci.sh destroy
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_COMMIT_BRANCH == "develop"'
