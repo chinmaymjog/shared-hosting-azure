@@ -31,6 +31,10 @@ sudo usermod -aG docker webadmin
 # Start and enable Docker
 sudo systemctl enable docker.service
 sudo systemctl enable containerd.service
+
+# Install Ansible (required by AWX 24.6.1 Make targets)
+sudo apt-get install -y ansible
+
 sudo systemctl start docker
 
 echo "Docker installation complete for AWX!"
