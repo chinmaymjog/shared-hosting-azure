@@ -13,7 +13,12 @@ sudo apt-get install -y \
     git \
     make \
     cifs-utils \
-    ansible
+    nfs-common \
+    ansible \
+    python3-cryptography
+
+# Install Azure CLI
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 # Add Docker's official GPG key
 sudo mkdir -p /etc/apt/keyrings
