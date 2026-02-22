@@ -14,7 +14,8 @@ stages:
   - destroy
 
 before_script:
-  - apk add --no-cache bash curl
+  - apk add --no-cache bash curl python3 py3-pip
+  - pip3 install --no-cache-dir azure-cli --break-system-packages
   - chmod +x deploy-ci.sh
   - echo "Injecting SSH keys from CI/CD variables..."
   - echo "$SSH_PRIVATE_KEY" > azure-lamp-hosting/terraform/webadmin_rsa
