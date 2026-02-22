@@ -70,12 +70,12 @@ resource "null_resource" "upload_vars" {
 
   provisioner "remote-exec" {
     inline = [
-      "mkdir -p /home/${module.hub.vm_user}/semaphore/vars"
+      "mkdir -p /home/${var.vm_user}/semaphore/vars"
     ]
 
     connection {
       type        = "ssh"
-      user        = module.hub.vm_user
+      user        = var.vm_user
       private_key = file("${path.root}/webadmin_rsa")
       host        = module.hub.vm_ip
     }
@@ -83,11 +83,11 @@ resource "null_resource" "upload_vars" {
 
   provisioner "file" {
     source      = "${path.module}/hosts"
-    destination = "/home/${module.hub.vm_user}/semaphore/vars/hosts"
+    destination = "/home/${var.vm_user}/semaphore/vars/hosts"
 
     connection {
       type        = "ssh"
-      user        = module.hub.vm_user
+      user        = var.vm_user
       private_key = file("${path.root}/webadmin_rsa")
       host        = module.hub.vm_ip
     }
@@ -95,11 +95,11 @@ resource "null_resource" "upload_vars" {
 
   provisioner "file" {
     source      = "${path.module}/database_vars.yml"
-    destination = "/home/${module.hub.vm_user}/semaphore/vars/database_vars.yml"
+    destination = "/home/${var.vm_user}/semaphore/vars/database_vars.yml"
 
     connection {
       type        = "ssh"
-      user        = module.hub.vm_user
+      user        = var.vm_user
       private_key = file("${path.root}/webadmin_rsa")
       host        = module.hub.vm_ip
     }

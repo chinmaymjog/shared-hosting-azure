@@ -1,321 +1,106 @@
-# Part 3: Ansible – Configuration Management
-
-## Administrative Tools
-
-## backup_apache_config
-
-**Description:** Backs up Apache and PHP-FPM configuration files using Ansible, including core configs, virtual hosts, auth settings, and PHP pools, with timestamped archives for recovery and auditing.
-
-```bash
-sudo ansible-playbook --extra-vars "web_environment=preproduction" /etc/ansible/playbooks/backup_apache_config.yml
-sudo ansible-playbook --extra-vars "web_environment=production" /etc/ansible/playbooks/backup_apache_config.yml
-```
-
-## backup_databases
-
-**Description:** Backs up MySQL databases from preproduction and production using Ansible, with timestamped dumps for disaster recovery and auditing.
-
-```bash
-sudo ansible-playbook --extra-vars "web_environment=preproduction" --vault-password-file /etc/ansible/vault.txt /etc/ansible/playbooks/backup_databases.yml
-sudo ansible-playbook --extra-vars "web_environment=production" --vault-password-file /etc/ansible/vault.txt /etc/ansible/playbooks/backup_databases.yml
-```
-
-## backup_site_config
-
-**Description:** Backs up site-specific configuration files (.env, .htaccess, wp-config.php) using Ansible, with timestamped copies for recovery and auditing.
-
-```bash
-sudo ansible-playbook --extra-vars "web_environment=preproduction" /etc/ansible/playbooks/backup_site_config.yml
-sudo ansible-playbook --extra-vars "web_environment=production" /etc/ansible/playbooks/backup_site_config.yml
-```
-
-## configure_web_server
-
-**Description:** Configures the Apache web server using Ansible by applying virtual host settings, authentication rules, and PHP-FPM integration for the target environment.
-
-```bash
-sudo ansible-playbook /etc/ansible/playbooks/server_web_configuration.yml
-```
-
-## site_remove
-
-**Description:** Removes a website configuration from the Apache server using Ansible, including virtual host files, auth settings, and associated PHP-FPM configs.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script | Referenced parameters |
-| --- | --- | --- | --- |
-| String Parameter | site_url | | |
-| Active Choices Parameter | web_environment | `return['preproduction', 'production']` | |
-| Active Choices Parameter | site_type | `return['html', 'php']` | |
-| Active Choices Reactive Param| php_version | `if (site_type == 'php') return ['php8.3']; else return ['NA']`| site_type |
-
-**Build Steps:** Execute shell
-
-```bash
-if [ -z "$site_url" ]; then
-echo "URL cannot be empty"
-exit 1
-fi
-
-# Handle HTML site deployment
-if [ "${site_type}" = "html" ]; then
-echo Deleting html site ${site_url} on ${web_environment}
-    sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/html_site_remove.yml
-fi
-
-# Handle PHP site deployment
-if [ "${site_type}" = "php" ]; then
-echo Deleting php ${php_version} site ${site_url} on ${web_environment}
-    sudo ansible-playbook --extra-vars "site_url=${site_url} php_version=${php_version} web_environment=${web_environment}" --vault-password-file /etc/ansible/vault.txt /etc/ansible/playbooks/php_site_remove.yml
-fi
-```
-
-## php_install
-
-**Description:** Installs and configures PHP and required extensions using Ansible based on the selected PHP version and site type.
-
-**Parameters:**
-| Parameter Type | Parameter |
-| --- | --- |
-| String Parameter | php_version |
-
-**Build Steps:** Execute shell
-
-```bash
-sudo ansible-playbook --extra-vars "php_version=${php_version}" /etc/ansible/playbooks/php_install.yml
-```
-
-## server_hardening
-
-**Description:** Applies OS-level security hardening using Ansible, including SSH configuration, firewall rules, package restrictions, and CIS benchmark settings.
-
-**Build Steps:** Execute shell
-
-```bash
-sudo ansible-playbook /etc/ansible/playbooks/server_hardening.yml
-```
-
-# Hosting Management Portal
-
-## db_dump
-
-**Description:** Creates a timestamped MySQL database dump using Ansible for backup, migration, or troubleshooting purposes.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script |
-| --- | --- | --- |
-| String Parameter | site_url | |
-| Active Choices Parameter | web_environment| `return['preproduction', 'production']` |
-
-**Build Steps:** Execute shell
-
-```bash
-if [ -z "$site_url" ]; then
-echo "URL cannot be empty"
-exit 1
-fi
-
-sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/db_dump.yml
-```
-
-## generate_csr
-
-**Description:** Generates a Certificate Signing Request (CSR) and private key using Ansible for SSL certificate provisioning.
-
-**Parameters:**
-| Parameter Type | Parameter |
-| --- | --- |
-| String Parameter | commonName |
-| String Parameter | countryName |
-| String Parameter | localityName |
-| String Parameter | stateOrProvinceName |
-| String Parameter | organizationName |
-| String Parameter | organizationalUnitName |
-| String Parameter | emailAddress |
-| String Parameter | subjectAltName|
-
-```bash
-sudo ansible-playbook --extra-vars "commonName=${commonName} countryName=${countryName} localityName=${localityName} stateOrProvinceName=${stateOrProvinceName} organizationName=${organizationName} organizationalUnitName=${organizationalUnitName} emailAddress=${emailAddress} subjectAltName=${subjectAltName}" /etc/ansible/playbooks/generate_csr.yml
-sudo cat /site-data/csr/${commonName}/${commonName}*$(date '+%Y-%m-%d').csr
-sudo ls -ltr /site-data/csr/${commonName}/
-```
-
-## http_auth_add
-
-**Description:** Adds HTTP basic authentication users to the Apache auth-files using Ansible, supporting secure access control for protected sites.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script |
-| --- | --- | --- |
-| String Parameter | site_url | |
-| Active Choices Parameter | web_environment| `return['preproduction', 'production']` |
-
-**Build Steps:** Execute shell
-
-```bash
-if [ -z "$site_url" ]; then
-echo "URL cannot be empty"
-exit 1
-fi
-
-sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/http_auth_add.yml
-```
-
-## http_auth_disable
-
-**Description:** Disables HTTP basic authentication for a site by updating Apache configuration and auth settings using Ansible.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script |
-| --- | --- | --- |
-| String Parameter | site_url | |
-| Active Choices Parameter | web_environment| `return['preproduction', 'production']` |
-
-**Build Steps:** Execute shell
-
-```bash
-if [ -z "$site_url" ]; then
-echo "URL cannot be empty"
-exit 1
-fi
-
-sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/http_auth_disable.yml
-```
-
-## http_auth_enable
-
-**Description:** Enables HTTP basic authentication for a site by configuring Apache and linking the appropriate auth-files using Ansible.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script |
-| --- | --- | --- |
-| String Parameter | site_url | |
-| Active Choices Parameter | web_environment| `return['preproduction', 'production']` |
-
-**Build Steps:** Execute shell
-
-```bash
-if [ -z "$site_url" ]; then
-echo "URL cannot be empty"
-exit 1
-fi
-
-sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/http_auth_enable.yml
-```
-
-## site_add
-
-**Description:** Deploys a new website by configuring Apache virtual hosts, setting up authentication, and applying PHP settings using Ansible.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script | Referenced parameters |
-| --- | --- | --- | --- |
-| String Parameter | site_url | | |
-| Active Choices Parameter | web_environment | `return['preproduction', 'production']` | |
-| Active Choices Parameter | site_type | `return['html', 'php']` | |
-| Active Choices Reactive Param| php_version | `if (site_type == 'php') return ['php8.3']; else return ['NA']`| site_type |
-
-**Build Steps:** Execute shell
-
-```bash
-if [ -z "$site_url" ]; then
-echo "URL cannot be empty"
-exit 1
-fi
-
-# Transform site_url for Preprod environment
-#if [ "$env" = "preproduction" ]; then
-# site_url=$(echo "${site_url}" | tr '.' '-').chinmaymjog.com
-#fi
-
-# Handle HTML site deployment
-if [ "${site_type}" = "html" ]; then
-echo Adding html site ${site_url} on ${web_environment}
-    sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/html_site_add.yml
-fi
-
-# Handle PHP site deployment
-if [ "${site_type}" = "php" ]; then
-echo Adding php ${php_version} site ${site_url} on ${web_environment}
-    sudo ansible-playbook --extra-vars "site_url=${site_url} php_version=${php_version} web_environment=${web_environment}" --vault-password-file /etc/ansible/vault.txt /etc/ansible/playbooks/php_site_add.yml
-fi
-```
-
-## site_disable
-
-**Description:** Disables an existing website by unlinking its Apache virtual host configuration and reloading the web server using Ansible.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script | Referenced parameters |
-| --- | --- | --- | --- |
-| String Parameter | site_url | | |
-| Active Choices Parameter | web_environment | `return['preproduction', 'production']` | |
-| Active Choices Parameter | site_type | `return['html', 'php']` | |
-
-**Build Steps:** Execute shell
-
-```bash
-if [ -z "$site_url" ]; then
-echo "URL cannot be empty"
-exit 1
-fi
-
-# Handle HTML site
-if [ "${site_type}" = "html" ]; then
-echo Disabling html site ${site_url} on ${web_environment}
-    sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/html_site_disable.yml
-fi
-
-# Handle PHP site
-if [ "${site_type}" = "php" ]; then
-echo Disabling php ${php_version} site ${site_url} on ${web_environment}
-    sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/php_site_disable.yml
-fi
-```
-
-## site_enable
-
-**Description:** Enables a website by linking its Apache virtual host configuration and reloading the web server using Ansible.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script | Referenced parameters |
-| --- | --- | --- | --- |
-| String Parameter | site_url | | |
-| Active Choices Parameter | web_environment | `return['preproduction', 'production']` | |
-| Active Choices Parameter | site_type | `return['html', 'php']` | |
-
-**Build Steps:** Execute shell
-
-```bash
-if [ -z "$site_url" ]; then
-echo "URL cannot be empty"
-exit 1
-fi
-
-# Handle HTML site
-if [ "${site_type}" = "html" ]; then
-echo Enabling html site ${site_url} on ${web_environment}
-    sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/html_site_enable.yml
-fi
-
-# Handle PHP site
-if [ "${site_type}" = "php" ]; then
-echo Enabling php ${php_version} site ${site_url} on ${web_environment}
-    sudo ansible-playbook --extra-vars "site_url=${site_url} web_environment=${web_environment}" /etc/ansible/playbooks/php_site_enable.yml
-fi
-```
-
-## site_list
-
-**Description:** Lists all available and enabled websites on the Apache server by retrieving virtual host configuration details using Ansible.
-
-**Parameters:**
-| Parameter Type | Parameter | Groovy Script |
-| --- | --- | --- |
-| Active Choices Parameter | web_environment | `return['preproduction', 'production']` |
-
-**Build Steps:** Execute shell
-
-```bash
-sudo ansible-playbook --extra-vars "web_environment=${web_environment}" /etc/ansible/playbooks/site_list.yml
-```
+# Part 3: Ansible – Configuration Management (Semaphore Guide)
+
+This guide details how to configure and run the project's Ansible playbooks using the **Ansible Semaphore** UI.
+
+## Semaphore Project Structure
+
+All playbooks are located in `ansible-control-plane/ansible/playbooks/`. Group your Task Templates into **Views** for better organization.
+
+### Shared Prerequisites
+For all templates, ensure the following are selected:
+- **Key Store**: `BastionKey`
+- **Inventory**: `Azure Dynamic Inventory`
+- **Repository**: `GitHub Repo`
+
+### Variable Management in Semaphore
+- **Survey Variables**: These are dynamic inputs prompted at runtime. Per user requirements, **all variables below should be defined as Survey Variables** in your Task Templates.
+- **Pro Tip**: To avoid re-defining the same Survey Variables multiple times, use the **Clone** feature in the Task Template view to duplicate an existing template and simply change the playbook path.
+
+---
+
+## View: Server Administration
+Core tasks for initial server setup and base configurations.
+
+### 1. Hardening (server_hardening.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/server_hardening.yml`
+- **Description**: Applies security best practices.
+
+### 2. Install PHP (php_install.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/php_install.yml`
+- **Survey Variables**:
+  - `php_version`: e.g., `php8.3`
+
+### 3. Base Web Configuration (server_web_configuration.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/server_web_configuration.yml`
+- **Description**: Sets up Apache base settings. Requires `web_vars.yml`.
+
+---
+
+## View: Website Management
+Daily operations for managing hosted sites.
+
+### 1. Add Website (site_add.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/php_site_add.yml` (or `html_site_add.yml`)
+- **Survey Variables**:
+  - `web_environment`: `production` or `preproduction`
+  - `site_url`: e.g., `www.example.com`
+  - `php_version`: e.g., `php8.3` (only for PHP sites)
+
+### 2. Remove Website (site_remove.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/php_site_remove.yml` (or `html_site_remove.yml`)
+- **Survey Variables**:
+  - `web_environment`: `production` or `preproduction`
+  - `site_url`: e.g., `www.example.com`
+
+### 3. Enable/Disable Site
+- **Playbook Paths**: `...site_enable.yml` / `...site_disable.yml`
+- **Survey Variables**: Same as Remove Website.
+
+### 4. Database Operations (db_dump.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/db_dump.yml`
+- **Survey Variables**:
+  - `web_environment`: `production` or `preproduction`
+  - `site_url`: Matches the site name.
+
+---
+
+## View: Security & Auth
+Management of SSL certificates and access controls.
+
+### 1. Add HTTP Auth (http_auth_add.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/http_auth_add.yml`
+- **Survey Variables**:
+  - `web_environment`: `production` or `preproduction`
+  - `site_url`: The target site.
+
+### 2. Generate CSR (generate_csr.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/generate_csr.yml`
+- **Survey Variables**:
+  - `commonName`: The domain name.
+  - `countryName`, `localityName`, `organizationName`, etc.
+  - `subjectAltName`: Optional DNS SANs.
+
+### 3. Upload Cert & Generate PFX (generate_pfx.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/generate_pfx.yml`
+- **Description**: Generates a PFX certificate and imports it into Azure Key Vault.
+- **Survey Variables**:
+  - `commonName`: The domain name.
+  - `csrDate`: The date suffix used in files (e.g., `2024-02-22`).
+  - `private_key_file`: Filename of the existing private key.
+  - `azure_keyvault_uri`: The target Key Vault URL.
+  - `azure_keyvault_cert_name`: Name for the cert in Key Vault.
+
+---
+
+## View: Backups
+Maintenance tasks for disaster recovery.
+
+### 1. Database Backups (backup_databases.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/backup_databases.yml`
+- **Survey Variables**:
+  - `web_environment`: `production` or `preproduction`
+
+### 2. Infrastructure Backups (backup_apache_config.yml)
+- **Playbook Path**: `ansible-control-plane/ansible/playbooks/backup_apache_config.yml`
+- **Survey Variables**:
+  - `web_environment`: `production` or `preproduction`
