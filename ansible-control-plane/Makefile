@@ -26,9 +26,9 @@ install:
 	
 deploy: prepare install
 	@echo "Building AWX Docker Compose..."
-	@cd $(CLONE_DIR)/tools/docker-compose && make docker-compose-build
+	@cd $(CLONE_DIR) && make docker-compose-build
 	@echo "Starting AWX..."
-	@cd $(CLONE_DIR)/tools/docker-compose && make docker-compose
+	@cd $(CLONE_DIR) && make docker-compose
 	@echo "\n======= AWX DEPLOYMENT COMPLETE ======="
 	@echo "AWX takes about 2-3 minutes to initialize its database migrations."
 	@echo "Access the UI at: http://<bastion-public-ip>:8013"
@@ -37,5 +37,6 @@ deploy: prepare install
 
 clean:
 	@echo "Stopping AWX and removing persistent data..."
-	@cd $(CLONE_DIR)/tools/docker-compose && docker compose down -v || true
+	@cd $(CLONE_DIR) && make docker-compose-down || true
+	@cd $(CLONE_DIR) && make docker-clean-volumes || true
 	@rm -rf $(CLONE_DIR)
