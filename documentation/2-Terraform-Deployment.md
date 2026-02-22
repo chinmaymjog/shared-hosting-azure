@@ -91,8 +91,8 @@ prod_snet_db          = ["10.0.1.64/26"]
 prod_snet_netapp      = ["10.0.1.128/26"]
 ```
 
-> 💡 **Zone Awareness**
-> Ensure that your VMs and NetApp volumes are deployed in the **same Availability Zone** to avoid throughput or latency issues.
+> 💡 **Zone Awareness & Enforcement**
+> To guarantee sub-millisecond latency and avoid cross-zone data transfer costs, our Terraform configuration **strictly enforces** that all VMs and NetApp volumes are deployed in the exact same Availability Zone. You only need to define the `preferred_zone` variable (valid options: `"1"`, `"2"`, or `"3"`). Terraform will validate this input and automatically collocate all compute and storage resources within that specific specified zone.
 
 ---
 

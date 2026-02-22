@@ -17,6 +17,11 @@ variable "l_short" {
 
 variable "preferred_zone" {
   description = "Preferred availability zone"
+  type        = string
+  validation {
+    condition     = contains(["1", "2", "3"], var.preferred_zone)
+    error_message = "The preferred_zone must be a valid Availability Zone (1, 2, or 3) to ensure VMs and NetApp volumes are strictly collocated for performance."
+  }
 }
 # variable "env" {
 #   description = "Define environment to deploy"
