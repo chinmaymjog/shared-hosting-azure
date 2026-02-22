@@ -58,6 +58,26 @@ cat <<EOF > ${TERRAFORM_DIR}/ci.auto.tfvars
 ip_allow = ["34.74.90.64/28", "34.74.226.0/24", "152.59.63.84", "${CURRENT_IP}"]
 EOF
 
+# Dynamic Firewall Punching for GitLab Runner
+# This ensures the dynamic runner IP can access Key Vault and Storage Account during Plan/Apply
+echo "=> Punching Azure Firewalls for current runner IP..."
+az login --service-principal \
+  --username "$ARM_CLIENT_ID" \
+  --password "$ARM_CLIENT_SECRET" \
+  --tenant "$ARM_TENANT_ID" > /dev/null
+
+echo "   - Whitelisting $CURRENT_IP in Key Vault firewall..."
+az keyvault network-rule add \
+  --name "kv-host-hub-inc" \
+  --resource-group "rg-host-hub-inc" \
+  --ip-address "$CURRENT_IP" > /dev/null
+
+echo "   - Whitelisting $CURRENT_IP in Storage Account firewall..."
+az storage account network-rule add \
+  --account-name "sthosthubinc" \
+  --resource-group "rg-host-hub-inc" \
+  --ip-address "$CURRENT_IP" > /dev/null
+
 # Define INIT command dynamically based on CI environment
 if [ -n "$CI_PROJECT_ID" ]; then
     echo "=> CI/CD Pipeline detected. Configuring Managed HTTP Backend..."
