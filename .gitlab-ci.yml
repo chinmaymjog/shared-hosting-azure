@@ -55,3 +55,7 @@ destroy_infrastructure:
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
       when: manual
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
