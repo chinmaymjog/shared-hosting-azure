@@ -1,0 +1,33 @@
+services:
+  semaphore:
+    image: semaphoreui/semaphore:v2.10.32
+    container_name: semaphore
+    ports:
+      - "3000:3000"
+    environment:
+      SEMAPHORE_DB_USER: semaphore
+      SEMAPHORE_DB_PASS: semaphore123
+      SEMAPHORE_DB_HOST: mysql
+      SEMAPHORE_DB_PORT: 3306
+      SEMAPHORE_DB_DIALECT: mysql
+      SEMAPHORE_DB: semaphore
+      SEMAPHORE_ADMIN_PASSWORD: Password123!
+      SEMAPHORE_ADMIN_NAME: Admin
+      SEMAPHORE_ADMIN_EMAIL: admin@example.com
+      SEMAPHORE_ADMIN_USERNAME: admin
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: semaphore-mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: semaphore
+      MYSQL_USER: semaphore
+      MYSQL_PASSWORD: semaphore123
+    volumes:
+      - semaphore-mysql-data:/var/lib/mysql
+
+volumes:
+  semaphore-mysql-data:
