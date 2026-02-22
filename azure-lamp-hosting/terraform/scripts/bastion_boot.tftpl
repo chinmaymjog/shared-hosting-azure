@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# --- Part 1: Docker Installation ---
+# Update package lists
+sudo apt-get update -y
+
+# Install prerequisites
+sudo apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release \
+    git \
+    make \
+    cifs-utils \
+    ansible
+
+# Add Docker's official GPG key
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# Set up the stable Docker repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker Engine and Docker Compose
+sudo apt-get update -y
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Ensure Webadmin user has Docker permissions
+sudo usermod -aG docker webadmin
+
+# Start and enable Docker
+sudo systemctl enable docker.service
+sudo systemctl enable containerd.service
+sudo systemctl start docker
+
+echo "Docker installation complete!"
+
+# --- Part 2: CIFS mount for Azure File Share ---
+STORAGE_ACCOUNT_NAME="${storage_account_name}"
+STORAGE_ACCOUNT_KEY="${storage_account_key}"
+SHARE_NAME="${share_name}"
+MOUNT_PATH="/mnt/backup"
+
+sudo mkdir -p $MOUNT_PATH
+
+# Create credentials file
+sudo mkdir -p /etc/smbcredentials
+if [ ! -f "/etc/smbcredentials/$STORAGE_ACCOUNT_NAME.cred" ]; then
+    echo "username=$STORAGE_ACCOUNT_NAME" | sudo tee /etc/smbcredentials/$STORAGE_ACCOUNT_NAME.cred
+    echo "password=$STORAGE_ACCOUNT_KEY" | sudo tee -a /etc/smbcredentials/$STORAGE_ACCOUNT_NAME.cred
+fi
+sudo chmod 600 /etc/smbcredentials/$STORAGE_ACCOUNT_NAME.cred
+
+# Add to fstab for persistence
+if ! grep -qs "$MOUNT_PATH" /etc/fstab; then
+    echo "//$STORAGE_ACCOUNT_NAME.file.core.windows.net/$SHARE_NAME $MOUNT_PATH cifs nofail,credentials=/etc/smbcredentials/$STORAGE_ACCOUNT_NAME.cred,dir_mode=0777,file_mode=0777,serverino,nosharesock,actimeo=30" | sudo tee -a /etc/fstab
+fi
+
+# Mount all entries in fstab
+sudo mount -a
+
+echo "Backup mount complete at $MOUNT_PATH"

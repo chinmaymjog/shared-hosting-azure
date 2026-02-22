@@ -18,6 +18,7 @@ services:
     volumes:
       - /home/webadmin/semaphore/vars:/home/semaphore/vars:ro
       - /home/webadmin/semaphore/site-data:/site-data:rw
+      - /mnt/backup:/backup:rw
     depends_on:
       - mysql
 

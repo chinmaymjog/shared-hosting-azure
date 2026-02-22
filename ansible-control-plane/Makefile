@@ -10,7 +10,7 @@ deploy:
 	@echo "Checking for Docker Compose..."
 	@docker compose version || (echo "Docker Compose not found! Please install Docker Compose first." && exit 1)
 	@echo "Ensuring required directories exist..."
-	@mkdir -p vars site-data
+	@mkdir -p vars site-data backup
 	@echo "Starting Ansible Semaphore..."
 	@docker compose up -d
 	@echo "\n======= SEMAPHORE DEPLOYMENT COMPLETE ======="

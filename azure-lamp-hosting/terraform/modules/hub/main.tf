@@ -134,7 +134,11 @@ resource "azurerm_linux_virtual_machine" "vm" {
     disk_size_gb         = var.bastion_osdisk
   }
 
-  custom_data = filebase64("${path.root}/scripts/install_docker.sh")
+  custom_data = base64encode(templatefile("${path.root}/scripts/bastion_boot.tftpl", {
+    storage_account_name = azurerm_storage_account.storage.name
+    storage_account_key  = azurerm_storage_account.storage.primary_access_key
+    share_name           = azurerm_storage_share.file_share.name
+  }))
 
   source_image_reference {
     publisher = "Canonical"
