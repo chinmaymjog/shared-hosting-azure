@@ -1,6 +1,6 @@
 services:
   semaphore:
-    image: semaphoreui/semaphore:v2.10.32
+    build: .
     container_name: semaphore
     ports:
       - "3000:3000"
