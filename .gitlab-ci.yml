@@ -9,6 +9,7 @@ variables:
   TF_IN_AUTOMATION: "true"
 
 stages:
+  - plan
   - deploy
   - destroy
 
@@ -21,7 +22,18 @@ before_script:
   - chmod 600 azure-lamp-hosting/terraform/webadmin_rsa
 
 # ==================================================
-# Deploy Infrastructure automatically on 'develop'
+# Plan Infrastructure automatically on 'develop'
+# ==================================================
+plan_infrastructure:
+  stage: plan
+  script:
+    - echo "Executing plan script via CI/CD..."
+    - ./deploy.sh plan
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+# ==================================================
+# Deploy Infrastructure manually on 'develop'
 # ==================================================
 deploy_infrastructure:
   stage: deploy
@@ -30,6 +42,7 @@ deploy_infrastructure:
     - ./deploy.sh apply
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
+      when: manual
 
 # ==================================================
 # Manual Destroy for cleanup
