@@ -237,13 +237,14 @@ resource "azurerm_cdn_frontdoor_origin_group" "preprod_origin_group" {
 }
 ### Azure File Storage
 resource "azurerm_storage_account" "storage" {
-  name                     = "st${var.p_short}${var.e_short}${var.l_short}"
-  resource_group_name      = azurerm_resource_group.hub.name
-  location                 = var.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  min_tls_version          = "TLS1_2"
-  is_hns_enabled           = true
+  name                          = "st${var.p_short}${var.e_short}${var.l_short}"
+  resource_group_name           = azurerm_resource_group.hub.name
+  location                      = var.location
+  account_tier                  = "Standard"
+  account_replication_type      = "LRS"
+  min_tls_version               = "TLS1_2"
+  public_network_access_enabled = true
+  is_hns_enabled                = true
   lifecycle {
     ignore_changes = [tags]
   }

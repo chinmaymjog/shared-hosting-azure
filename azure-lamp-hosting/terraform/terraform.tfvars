@@ -5,7 +5,7 @@ location       = "centralindia"
 l_short        = "inc"
 preferred_zone = "1" # Preferred Availability Zone (for VMs & NetApp volumes)
 vm_user        = "webadmin"
-ip_allow       = ["34.74.90.64/28","34.74.226.0/24","152.59.63.84"] # IP(s) to whitelist for access
+ip_allow       = ["152.59.63.84"] # IP(s) to whitelist for access
 
 ## Hub Environment Configuration
 hub_vnet_space        = ["10.0.0.0/24"]
