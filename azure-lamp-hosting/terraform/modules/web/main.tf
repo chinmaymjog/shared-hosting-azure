@@ -19,6 +19,7 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_virtual_network_peering" "hub" {
+  depends_on                = [azurerm_subnet.web, azurerm_subnet.db, azurerm_subnet.netapp]
   name                      = "hub-${var.env}"
   resource_group_name       = var.hub_rg_name
   virtual_network_name      = var.hub_vnet_name
@@ -26,6 +27,7 @@ resource "azurerm_virtual_network_peering" "hub" {
 }
 
 resource "azurerm_virtual_network_peering" "env" {
+  depends_on                = [azurerm_subnet.web, azurerm_subnet.db, azurerm_subnet.netapp]
   name                      = "${var.env}-hub"
   resource_group_name       = azurerm_resource_group.rg.name
   virtual_network_name      = azurerm_virtual_network.vnet.name
@@ -274,6 +276,7 @@ resource "azurerm_cdn_frontdoor_route" "route" {
 
 ### Azure Netapp Volume
 resource "azurerm_netapp_volume" "netapp_volume" {
+  depends_on          = [azurerm_virtual_network_peering.hub, azurerm_virtual_network_peering.env]
   name                = "volume-${var.p_short}-${var.e_short}-${var.l_short}"
   location            = var.location
   zone                = var.zone
@@ -337,7 +340,11 @@ resource "azurerm_mysql_flexible_server" "mysql" {
     size_gb = var.dbsize
   }
 
-  depends_on = [azurerm_private_dns_zone_virtual_network_link.vnet-link]
+  depends_on = [
+    azurerm_private_dns_zone_virtual_network_link.vnet-link,
+    azurerm_virtual_network_peering.hub,
+    azurerm_virtual_network_peering.env
+  ]
 }
 
 ### Key Vault DB secret

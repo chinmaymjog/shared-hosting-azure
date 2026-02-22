@@ -51,7 +51,8 @@ output "key_vault_name" {
 }
 
 output "key_vault_id" {
-  value = azurerm_key_vault.kv.id
+  value      = azurerm_key_vault.kv.id
+  depends_on = [time_sleep.wait_for_kv_fw]
 }
 
 output "vm_ip" {

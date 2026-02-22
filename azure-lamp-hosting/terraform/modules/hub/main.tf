@@ -145,6 +145,11 @@ resource "azurerm_linux_virtual_machine" "vm" {
 }
 
 resource "null_resource" "key_upload" {
+  depends_on = [
+    azurerm_linux_virtual_machine.vm,
+    azurerm_network_security_rule.ssh,
+    azurerm_subnet_network_security_group_association.nsg-web
+  ]
   provisioner "file" {
     source      = "${path.root}/webadmin_rsa"
     destination = "/home/${var.vm_user}/.ssh/id_rsa"
@@ -329,7 +334,13 @@ resource "azurerm_key_vault" "kv" {
   }
 }
 
+resource "time_sleep" "wait_for_kv_fw" {
+  depends_on      = [azurerm_key_vault.kv]
+  create_duration = "60s"
+}
+
 resource "azurerm_key_vault_secret" "key" {
+  depends_on   = [time_sleep.wait_for_kv_fw]
   name         = "sshkey"
   value        = replace(file("${path.root}/webadmin_rsa"), "/\n/", "\n")
   key_vault_id = azurerm_key_vault.kv.id
