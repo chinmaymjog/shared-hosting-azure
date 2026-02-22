@@ -236,6 +236,16 @@ resource "azurerm_linux_virtual_machine" "web" {
     disk_size_gb         = var.webvm_osdisk
   }
 
+  custom_data = base64encode(<<-EOF
+              #!/bin/bash
+              apt-get update
+              apt-get install -y nfs-common
+              mkdir -p /netappwebsites
+              mount -t nfs -o rw,hard,rsize=65536,wsize=65536,vers=4.1,tcp,sec=sys ${azurerm_netapp_volume.netapp_volume.mount_ip_addresses[0]}:${azurerm_netapp_volume.netapp_volume.volume_path} /netappwebsites
+              echo "${azurerm_netapp_volume.netapp_volume.mount_ip_addresses[0]}:${azurerm_netapp_volume.netapp_volume.volume_path} /netappwebsites nfs rw,hard,rsize=65536,wsize=65536,vers=4.1,tcp,sec=sys 0 0" >> /etc/fstab
+              EOF
+  )
+
   source_image_reference {
     publisher = "Canonical"
     offer     = "ubuntu-24_04-lts"

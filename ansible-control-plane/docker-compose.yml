@@ -17,6 +17,7 @@ services:
       SEMAPHORE_ADMIN_USERNAME: admin
     volumes:
       - /home/webadmin/semaphore/vars:/home/semaphore/vars:ro
+      - /home/webadmin/semaphore/site-data:/site-data:rw
     depends_on:
       - mysql
 
