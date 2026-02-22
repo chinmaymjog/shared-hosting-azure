@@ -55,7 +55,7 @@ echo "Current IP detected as: $CURRENT_IP"
 # Create a high-precedence auto.tfvars file to override terraform.tfvars
 # This ensures it overrides any hardcoded values in terraform.tfvars
 cat <<EOF > ${TERRAFORM_DIR}/ci.auto.tfvars
-ip_allow = ["152.58.30.50", "${CURRENT_IP}"]
+ip_allow = ["34.74.90.64/28", "34.74.226.0/24", "152.59.63.84", "${CURRENT_IP}"]
 EOF
 
 # Define INIT command dynamically based on CI environment
