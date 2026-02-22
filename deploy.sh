@@ -52,10 +52,9 @@ echo "=> Fetching current execution IP..."
 CURRENT_IP=$(curl -s https://ifconfig.me)
 echo "Current IP detected as: $CURRENT_IP"
 
-# Grab the base IPs from terraform.tfvars without overwriting the file
-# Using jq allows us to dynamically construct the array if we had more complex extraction, 
-# but simply passing it as a Terraform variable override flag (-var) is safest.
-ADDITIONAL_VARS="-var=ip_allow=[\"152.58.30.50\",\"$CURRENT_IP\"]"
+# Set the variable as an environment variable so Terraform automatically picks it up
+# This avoids any CLI parsing and quoting issues with arrays.
+export TF_VAR_ip_allow="[\"152.58.30.50\", \"${CURRENT_IP}\"]"
 
 COMMAND=$1
 
@@ -64,19 +63,19 @@ case "$COMMAND" in
         echo "=> Running Terraform Plan..."
         cd "$TERRAFORM_DIR"
         terraform init
-        terraform plan $ADDITIONAL_VARS
+        terraform plan
         ;;
     apply)
         echo "=> Running Terraform Apply..."
         cd "$TERRAFORM_DIR"
         terraform init
-        terraform apply -auto-approve $ADDITIONAL_VARS
+        terraform apply -auto-approve
         ;;
     destroy)
         echo "=> Running Terraform Destroy..."
         cd "$TERRAFORM_DIR"
         terraform init
-        terraform destroy -auto-approve $ADDITIONAL_VARS
+        terraform destroy -auto-approve
         ;;
     *)
         print_usage
