@@ -60,3 +60,48 @@ production:
 EOF
   filename = "${path.module}/database_vars.yml"
 }
+
+resource "null_resource" "upload_vars" {
+  depends_on = [
+    local_file.hosts,
+    local_file.database_vars,
+    module.hub
+  ]
+
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p /home/${module.hub.vm_user}/semaphore/vars"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = module.hub.vm_user
+      private_key = file("${path.root}/webadmin_rsa")
+      host        = module.hub.vm_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/hosts"
+    destination = "/home/${module.hub.vm_user}/semaphore/vars/hosts"
+
+    connection {
+      type        = "ssh"
+      user        = module.hub.vm_user
+      private_key = file("${path.root}/webadmin_rsa")
+      host        = module.hub.vm_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/database_vars.yml"
+    destination = "/home/${module.hub.vm_user}/semaphore/vars/database_vars.yml"
+
+    connection {
+      type        = "ssh"
+      user        = module.hub.vm_user
+      private_key = file("${path.root}/webadmin_rsa")
+      host        = module.hub.vm_ip
+    }
+  }
+}

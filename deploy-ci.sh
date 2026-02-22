@@ -47,7 +47,7 @@ if [ ! -f "${TERRAFORM_DIR}/webadmin_rsa" ] || [ ! -f "${TERRAFORM_DIR}/webadmin
 fi
 
 # Automatically append the current executing machine's IP to the allowed list.
-# This ensures that GitLab CI (or your local setup) doesn't lock itself out of Key Vault and Bastion SSH.
+# This ensures that CI/CD pipelines (or your local setup) don't lock themselves out of Key Vault and Bastion SSH.
 echo "=> Fetching current execution IP..."
 CURRENT_IP=$(curl -s https://ifconfig.me)
 echo "Current IP detected as: $CURRENT_IP"
@@ -60,7 +60,7 @@ EOF
 
 # Define INIT command dynamically based on CI environment
 if [ -n "$CI_PROJECT_ID" ]; then
-    echo "=> GitLab CI detected. Configuring GitLab HTTP Backend..."
+    echo "=> CI/CD Pipeline detected. Configuring Managed HTTP Backend..."
     
     # Create a backend override file dynamically so we don't break local execution
     cat <<EOF > ${TERRAFORM_DIR}/backend.tf

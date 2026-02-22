@@ -64,14 +64,14 @@ resource "azurerm_network_security_rule" "ssh" {
   network_security_group_name  = azurerm_network_security_group.hub-nsg.name
 }
 
-resource "azurerm_network_security_rule" "jenkis" {
-  name                         = "Jenkins"
+resource "azurerm_network_security_rule" "semaphore" {
+  name                         = "SemaphoreAccess"
   priority                     = 102
   direction                    = "Inbound"
   access                       = "Allow"
   protocol                     = "Tcp"
   source_port_range            = "*"
-  destination_port_ranges      = ["81", "8080", "8081"]
+  destination_port_ranges      = ["3000"]
   source_address_prefixes      = var.ip_allow
   destination_address_prefixes = azurerm_network_interface.nic-vm.private_ip_addresses
   resource_group_name          = azurerm_resource_group.hub.name

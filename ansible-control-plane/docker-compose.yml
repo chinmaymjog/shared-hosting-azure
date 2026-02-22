@@ -15,6 +15,8 @@ services:
       SEMAPHORE_ADMIN_NAME: Admin
       SEMAPHORE_ADMIN_EMAIL: admin@example.com
       SEMAPHORE_ADMIN_USERNAME: admin
+    volumes:
+      - /home/webadmin/semaphore/vars:/home/semaphore/vars:ro
     depends_on:
       - mysql
 
