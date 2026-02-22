@@ -2,6 +2,8 @@
 - name: Configure newly added webserver
   hosts: all
   become: true
+  vars_files:
+    - var_files/web_vars.yml
 
   tasks:
     - name: Update all packages

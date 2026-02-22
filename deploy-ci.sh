@@ -47,7 +47,7 @@ if [ ! -f "${TERRAFORM_DIR}/webadmin_rsa" ] || [ ! -f "${TERRAFORM_DIR}/webadmin
 fi
 
 # Automatically append the current executing machine's IP to the allowed list.
-# This ensures that GitLab CI (or your local setup) doesn't lock itself out of Key Vault and Bastion SSH.
+# This ensures that CI/CD pipelines (or your local setup) don't lock themselves out of Key Vault and Bastion SSH.
 echo "=> Fetching current execution IP..."
 CURRENT_IP=$(curl -s https://ifconfig.me)
 echo "Current IP detected as: $CURRENT_IP"
@@ -55,12 +55,32 @@ echo "Current IP detected as: $CURRENT_IP"
 # Create a high-precedence auto.tfvars file to override terraform.tfvars
 # This ensures it overrides any hardcoded values in terraform.tfvars
 cat <<EOF > ${TERRAFORM_DIR}/ci.auto.tfvars
-ip_allow = ["152.58.30.50", "${CURRENT_IP}"]
+ip_allow = ["34.74.90.64/28", "34.74.226.0/24", "152.59.63.84", "${CURRENT_IP}"]
 EOF
+
+# Dynamic Firewall Punching for GitLab Runner
+# This ensures the dynamic runner IP can access Key Vault and Storage Account during Plan/Apply
+echo "=> Punching Azure Firewalls for current runner IP..."
+az login --service-principal \
+  --username "$ARM_CLIENT_ID" \
+  --password "$ARM_CLIENT_SECRET" \
+  --tenant "$ARM_TENANT_ID" > /dev/null
+
+echo "   - Whitelisting $CURRENT_IP in Key Vault firewall..."
+az keyvault network-rule add \
+  --name "kv-host-hub-inc" \
+  --resource-group "rg-host-hub-inc" \
+  --ip-address "$CURRENT_IP" > /dev/null
+
+echo "   - Whitelisting $CURRENT_IP in Storage Account firewall..."
+az storage account network-rule add \
+  --account-name "sthosthubinc" \
+  --resource-group "rg-host-hub-inc" \
+  --ip-address "$CURRENT_IP" > /dev/null
 
 # Define INIT command dynamically based on CI environment
 if [ -n "$CI_PROJECT_ID" ]; then
-    echo "=> GitLab CI detected. Configuring GitLab HTTP Backend..."
+    echo "=> CI/CD Pipeline detected. Configuring Managed HTTP Backend..."
     
     # Create a backend override file dynamically so we don't break local execution
     cat <<EOF > ${TERRAFORM_DIR}/backend.tf
