@@ -52,9 +52,11 @@ echo "=> Fetching current execution IP..."
 CURRENT_IP=$(curl -s https://ifconfig.me)
 echo "Current IP detected as: $CURRENT_IP"
 
-# Set the variable as an environment variable so Terraform automatically picks it up
-# This avoids any CLI parsing and quoting issues with arrays.
-export TF_VAR_ip_allow="[\"152.58.30.50\", \"${CURRENT_IP}\"]"
+# Create a high-precedence auto.tfvars file to override terraform.tfvars
+# This ensures it overrides any hardcoded values in terraform.tfvars
+cat <<EOF > ${TERRAFORM_DIR}/ci.auto.tfvars
+ip_allow = ["152.58.30.50", "${CURRENT_IP}"]
+EOF
 
 # Define INIT command dynamically based on CI environment
 if [ -n "$CI_PROJECT_ID" ]; then
