@@ -58,9 +58,11 @@ You must also have an **Azure Service Principal** configured with the `Contribut
 
 ## Phase 1: Deploy Infrastructure (Terraform)
 
-This project contains a convenient `./deploy.sh` script to streamline Terraform execution.
+This project contains convenient shell scripts to streamline Terraform execution depending on where you are running it.
 
 ### Local Execution (Manual)
+End-users cloning this repository should use the simplified `./deploy.sh` script. This executes standard `terraform init` and manages your **Terraform State File (`.terraform.tfstate`) locally** on your machine.
+
 1. Clone this repository to your local machine:
    ```bash
    git clone git@gitlab.com:chinmaymjog1/shared-hosting-azure.git
@@ -79,8 +81,12 @@ This project contains a convenient `./deploy.sh` script to streamline Terraform 
    ./deploy.sh apply
    ```
 
+> ⚠️ **State Management Warning:** Because local execution strictly stores the Terraform state file on your hard drive, losing or deleting this `azure-lamp-hosting/terraform/` state file will result in Terraform forgetting it owns the Azure infrastructure. Running `./deploy.sh apply` again without the original state file will cause Azure to throw `Resource already exists` errors. Ensure you do not delete your local state folder while testing! If you encounter this error on discarded architecture, manually delete the Resource Groups in the Azure Portal to start fresh.
+
 ### Automated Execution (GitLab CI/CD - Maintainers Only)
-> **Note:** The included `.gitlab-ci.yml` is designed for the project maintainer. If you fall into this category and are pushing to the `develop` branch, the pipeline will automatically trigger. 
+> **Note:** The included `.gitlab-ci.yml` uses a dedicated `./deploy-ci.sh` script designed for automation. 
+
+Unlike the local script, `deploy-ci.sh` dynamically detects the runner's IP to bypass Azure network firewalls, and automatically injects a **GitLab Managed HTTP Terraform Backend**. This means the CI pipeline securely centralizes the state file in the GitLab repository under *Operate > Terraform states*, guaranteeing the runner never accidentally loses track of the deployed infrastructure between jobs.
 
 *Maintainers Required Variables:*
 - `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID` (Azure Credentials)

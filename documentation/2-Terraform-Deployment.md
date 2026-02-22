@@ -121,7 +121,7 @@ The `webadmin_rsa.pub` file will be injected into VMs during provisioning.
 ./deploy.sh apply
 ```
 
-> **Note for Maintainers:** The repository contains a `.gitlab-ci.yml` file. If you are the project maintainer pushing to the `develop` branch, this pipeline will automatically trigger the deployment. End-users cloning this repository should rely on the local `./deploy.sh` script as shown above.
+> **Note for Maintainers:** The repository contains a `.gitlab-ci.yml` pipeline that triggers a dedicated `./deploy-ci.sh` script. This specialized CI script injects dynamic IPs to bypass firewalls and safely stores the Terraform state securely inside the GitLab HTTP Backend. End-users cloning this repository should rely *only* on the local `./deploy.sh` script shown above, which tracks deployment state strictly on their local machine.
 
 ---
 
