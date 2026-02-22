@@ -16,7 +16,7 @@ default.json
 .terraform.tfstate.lock.info
 *.tfplan
 *.tfvars.json
-local.auto.tfvars
+*.auto.tfvars
 override.tf
 override.tf.json
 *_override.tf
