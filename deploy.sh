@@ -46,6 +46,45 @@ if [ ! -f "${TERRAFORM_DIR}/webadmin_rsa" ] || [ ! -f "${TERRAFORM_DIR}/webadmin
     exit 1
 fi
 
+# Automatically append the current executing machine's IP to the allowed list.
+# This ensures that your local setup doesn't lock itself out of Key Vault and Bastion SSH.
+echo "=> Fetching current execution IP..."
+CURRENT_IP=$(curl -s https://ifconfig.me)
+echo "Current IP detected as: $CURRENT_IP"
+
+# Parse existing ip_allow from terraform.tfvars to avoid hardcoding
+EXISTING_IPS_RAW=$(grep "ip_allow" ${TERRAFORM_DIR}/terraform.tfvars | sed 's/.*= *\[\(.*\)\].*/\1/')
+if [ -n "$EXISTING_IPS_RAW" ]; then
+    NEW_IP_ALLOW="[$EXISTING_IPS_RAW, \"$CURRENT_IP\"]"
+else
+    NEW_IP_ALLOW="[\"$CURRENT_IP\"]"
+fi
+
+# Create a high-precedence auto.tfvars file
+cat <<EOF > ${TERRAFORM_DIR}/local_dynamic.auto.tfvars
+ip_allow = $NEW_IP_ALLOW
+EOF
+
+# Dynamic Firewall Punching
+# This ensures the current IP can access Key Vault and Storage Account during Plan/Apply
+echo "=> Punching Azure Firewalls for current machine IP..."
+az login --service-principal \
+  --username "$ARM_CLIENT_ID" \
+  --password "$ARM_CLIENT_SECRET" \
+  --tenant "$ARM_TENANT_ID" > /dev/null
+
+echo "   - Whitelisting $CURRENT_IP in Key Vault firewall..."
+az keyvault network-rule add \
+  --name "kv-host-hub-inc" \
+  --resource-group "rg-host-hub-inc" \
+  --ip-address "$CURRENT_IP" > /dev/null
+
+echo "   - Whitelisting $CURRENT_IP in Storage Account firewall..."
+az storage account network-rule add \
+  --account-name "sthosthubinc" \
+  --resource-group "rg-host-hub-inc" \
+  --ip-address "$CURRENT_IP" > /dev/null
+
 COMMAND=$1
 
 case "$COMMAND" in

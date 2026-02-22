@@ -52,10 +52,17 @@ echo "=> Fetching current execution IP..."
 CURRENT_IP=$(curl -s https://ifconfig.me)
 echo "Current IP detected as: $CURRENT_IP"
 
+# Parse existing ip_allow from terraform.tfvars to avoid hardcoding
+EXISTING_IPS_RAW=$(grep "ip_allow" ${TERRAFORM_DIR}/terraform.tfvars | sed 's/.*= *\[\(.*\)\].*/\1/')
+if [ -n "$EXISTING_IPS_RAW" ]; then
+    NEW_IP_ALLOW="[$EXISTING_IPS_RAW, \"$CURRENT_IP\"]"
+else
+    NEW_IP_ALLOW="[\"$CURRENT_IP\"]"
+fi
+
 # Create a high-precedence auto.tfvars file to override terraform.tfvars
-# This ensures it overrides any hardcoded values in terraform.tfvars
 cat <<EOF > ${TERRAFORM_DIR}/ci.auto.tfvars
-ip_allow = ["34.74.90.64/28", "34.74.226.0/24", "152.59.63.84", "${CURRENT_IP}"]
+ip_allow = $NEW_IP_ALLOW
 EOF
 
 # Dynamic Firewall Punching for GitLab Runner

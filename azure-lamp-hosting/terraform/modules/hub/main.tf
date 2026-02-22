@@ -64,11 +64,6 @@ resource "azurerm_network_security_rule" "ssh" {
   network_security_group_name  = azurerm_network_security_group.hub-nsg.name
 }
 
-moved {
-  from = azurerm_network_security_rule.jenkis
-  to   = azurerm_network_security_rule.semaphore
-}
-
 resource "azurerm_network_security_rule" "semaphore" {
   name                         = "SemaphoreAccess"
   priority                     = 102
