@@ -55,11 +55,8 @@ destroy_infrastructure:
     - echo "Executing destroy script via CI/CD..."
     - ./deploy-ci.sh destroy
   rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
-      when: manual
-      allow_failure: true
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "schedule"'
       when: always
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: true
