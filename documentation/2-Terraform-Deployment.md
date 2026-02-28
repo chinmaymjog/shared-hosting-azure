@@ -12,6 +12,10 @@ In this section, we automate the provisioning of the shared hosting platform’s
 
 1. An active [Azure account](https://azure.microsoft.com/en-us/free/)
 2. A [**Service Principal**](https://learn.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli) with the **Contributor** role assigned to your [Azure subscription](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal)
+3. **Provider Registration**: Ensure the `Microsoft.NetApp` provider is registered in your subscription:
+   ```bash
+   az provider register --namespace Microsoft.NetApp
+   ```
 
 ---
 
@@ -28,24 +32,15 @@ azure-lamp-hosting/terraform/
 ├── providers.tf
 ├── terraform.tfvars      # Variable values
 ├── variables.tf          # Variable definitions
-├── webadmin_rsa          # Private SSH key
-└── webadmin_rsa.pub      # Public SSH key
+├── webadmin_rsa          # Private SSH key (Auto-generated)
+└── webadmin_rsa.pub      # Public SSH key (Auto-generated)
 ```
 
 ---
 
-## 🔐 Azure Authentication
+The `.env` file is automatically detected and loaded by the `deploy.sh` script.
 
-Set your Azure credentials in the `.env` file:
-
-```env
-ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
-ARM_CLIENT_SECRET="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-ARM_TENANT_ID="10000000-0000-0000-0000-000000000000"
-ARM_SUBSCRIPTION_ID="20000000-0000-0000-0000-000000000000"
-```
-
-The `.env` file is automatically detected and loaded by the `deploy.sh` script, so no manual sourcing is required.
+> 💡 **Developer Tip:** If you are running this locally and do not wish to use a Service Principal, simply ensure you are logged in via the Azure CLI (`az login`). The `deploy.sh` script will detect your active session and use it automatically.
 
 > ⚠️ **Important:** Never commit `.env` to version control.
 
@@ -62,7 +57,9 @@ location            = "centralindia"
 l_short             = "inc"
 preferred_zone      = "1"
 vm_user             = "webadmin"
-ip_allow            = ["152.58.XX.XX", "X.X.X.X"]
+ip_allow            = ["152.58.XX.XX", "X.X.X.X"] # ADD YOUR PUBLIC IP HERE
+
+> ⚠️ **Warning:** If you do not include your current public IP in `ip_allow`, you will be unable to access the Key Vault and Storage Account from your local machine, which may cause `deploy.sh` to fail during firewall punching.
 
 hub_vnet_space        = ["10.0.0.0/24"]
 hub_snet_web          = ["10.0.0.0/26"]
@@ -98,13 +95,9 @@ prod_snet_netapp      = ["10.0.1.128/26"]
 
 ## 🔑 SSH Access – Key Pair
 
-The `deploy.sh` script relies on an SSH key pair existing in the terraform directory before it provisions the VMs. Generate it from the root of the project:
+The `deploy.sh` script requires an SSH key pair to provision and manage the VMs. 
 
-```bash
-ssh-keygen -t rsa -f azure-lamp-hosting/terraform/webadmin_rsa -N ""
-```
-
-The `webadmin_rsa.pub` file will be injected into VMs during provisioning.
+**You do not need to generate these manually.** If the keys are missing from `azure-lamp-hosting/terraform/`, the script will automatically generate them for you using `ssh-keygen` during the first run. The public key is then injected into the VMs and uploaded to the Azure Key Vault for use by Ansible Semaphore.
 
 ---
 
@@ -121,7 +114,7 @@ The `webadmin_rsa.pub` file will be injected into VMs during provisioning.
 ./deploy.sh apply
 ```
 
-> **Note for Maintainers:** The repository contains a `.gitlab-ci.yml` pipeline that triggers a dedicated `./deploy-ci.sh` script. This specialized CI script injects dynamic IPs to bypass firewalls and safely stores the Terraform state securely inside the GitLab HTTP Backend. End-users cloning this repository should rely *only* on the local `./deploy.sh` script shown above, which tracks deployment state strictly on their local machine.
+> 🛡️ **Agnostic State Management:** Whether running locally or in a GitHub Actions pipeline, `deploy.sh` ensures your Terraform state is securely stored in a centralized Azure Storage Account. This eliminates the "lost local state" problem and allows multiple team members (or CI runners) to manage the same infrastructure safely.
 
 ---
 

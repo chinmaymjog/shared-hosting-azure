@@ -61,3 +61,19 @@ variable "netapp_pool_size_intb" {
 variable "file_share_quota" {
   description = "File share quota in GB"
 }
+
+variable "storage_replication_type" {
+  description = "Replication type for Storage Account"
+}
+
+variable "waf_enabled" {
+  description = "Enable WAF for Front Door"
+}
+
+variable "logging_enabled" {
+  description = "Enable centralized logging"
+}
+
+variable "acr_sku" {
+  description = "SKU for ACR"
+}

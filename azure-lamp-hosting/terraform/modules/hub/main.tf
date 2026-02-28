@@ -236,7 +236,7 @@ resource "azurerm_storage_account" "storage" {
   resource_group_name           = azurerm_resource_group.hub.name
   location                      = var.location
   account_tier                  = "Standard"
-  account_replication_type      = "LRS"
+  account_replication_type      = var.storage_replication_type
   min_tls_version               = "TLS1_2"
   public_network_access_enabled = true
   is_hns_enabled                = true
@@ -355,9 +355,54 @@ resource "azurerm_container_registry" "acr" {
   name                = "acr${var.p_short}${var.e_short}${var.l_short}"
   resource_group_name = azurerm_resource_group.hub.name
   location            = var.location
-  sku                 = "Basic"
+  sku                 = var.acr_sku
   admin_enabled       = true
   lifecycle {
     ignore_changes = [tags]
+  }
+}
+
+### Monitoring & Logging (Production Grade)
+resource "azurerm_log_analytics_workspace" "logs" {
+  count               = var.logging_enabled ? 1 : 0
+  name                = "log-${var.p_short}-${var.e_short}-${var.l_short}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.hub.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+### Web Application Firewall (Production Grade)
+resource "azurerm_cdn_frontdoor_firewall_policy" "waf" {
+  count               = var.waf_enabled ? 1 : 0
+  name                = "waf${var.p_short}${var.e_short}${var.l_short}"
+  resource_group_name = azurerm_resource_group.hub.name
+  sku_name            = azurerm_cdn_frontdoor_profile.fd.sku_name
+  enabled             = true
+  mode                = "Prevention"
+
+  managed_rule {
+    type    = "DefaultRuleSet"
+    version = "1.0"
+    action  = "Block"
+  }
+}
+
+resource "azurerm_cdn_frontdoor_security_policy" "sec_policy" {
+  count                    = var.waf_enabled ? 1 : 0
+  name                     = "WAFSecurityPolicy"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.fd.id
+
+  security_policies {
+    firewall {
+      cdn_frontdoor_firewall_policy_id = azurerm_cdn_frontdoor_firewall_policy.waf[0].id
+
+      association {
+        domain {
+          cdn_frontdoor_domain_id = azurerm_cdn_frontdoor_endpoint.prod-endpoint.id
+        }
+        patterns_to_match = ["/*"]
+      }
+    }
   }
 }

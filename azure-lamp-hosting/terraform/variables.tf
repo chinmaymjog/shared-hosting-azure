@@ -132,3 +132,40 @@ variable "prod_snet_db" {
 variable "prod_snet_netapp" {
   description = "Address space for netapp subnet"
 }
+
+# ## Production-Grade Hardening Variables
+variable "db_ha_enabled" {
+  description = "Enable High Availability for MySQL Flexible Server"
+  type        = bool
+  default     = false
+}
+
+variable "storage_replication_type" {
+  description = "Replication type for Storage Account (LRS, GRS, ZRS, etc.)"
+  type        = string
+  default     = "LRS"
+}
+
+variable "waf_enabled" {
+  description = "Enable Web Application Firewall (WAF) for Azure Front Door"
+  type        = bool
+  default     = false
+}
+
+variable "logging_enabled" {
+  description = "Enable centralized logging via Log Analytics Workspace"
+  type        = bool
+  default     = false
+}
+
+variable "backup_enabled" {
+  description = "Enable Azure Backup for Web VMs"
+  type        = bool
+  default     = false
+}
+
+variable "acr_sku" {
+  description = "SKU for Azure Container Registry (Basic, Standard, Premium)"
+  type        = string
+  default     = "Basic"
+}

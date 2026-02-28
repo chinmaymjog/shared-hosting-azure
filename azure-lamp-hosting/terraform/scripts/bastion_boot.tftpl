@@ -68,3 +68,10 @@ fi
 sudo mount -a
 
 echo "Backup mount complete at $MOUNT_PATH"
+
+# --- Part 3: Semaphore Directory Structure ---
+sudo mkdir -p /home/webadmin/semaphore/vars
+sudo mkdir -p /home/webadmin/semaphore/site-data
+sudo chown -R webadmin:webadmin /home/webadmin/semaphore
+
+echo "Semaphore directory structure ready."
