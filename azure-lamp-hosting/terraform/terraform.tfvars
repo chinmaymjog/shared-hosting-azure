@@ -10,17 +10,17 @@ ip_allow       = ["152.59.63.84"] # IP(s) to whitelist for access
 ## Hub Environment Configuration
 hub_vnet_space        = ["10.0.0.0/24"]
 hub_snet_web          = ["10.0.0.0/26"]
-bastion_size          = "Standard_B2ms" # Bastion VM SKU (bumped for AWX Docker)
-bastion_osdisk        = 64              # Bastion OS disk (in GB)
+bastion_size          = "Standard_B1s" # Bastion VM SKU (reduced for testing)
+bastion_osdisk        = 32              # Bastion OS disk (in GB)
 netapp_sku            = "Standard"      # NetApp Storage SKU
 netapp_pool_size_intb = 1               # NetApp Pool size (in TB)
 file_share_quota      = 100             # File share quota (in GB)
 
 ## Web Environment (Shared Across PreProd & Prod)
-webvm_size          = "Standard_B2s"         # Web Server VM SKU
-webvm_count         = "2"                    # Number of Web VMs
-webvm_osdisk        = 64                     # OS Disk Size (in GB)
-dbsku               = "GP_Standard_D2ads_v5" # Azure MySQL Flexible Server SKU
+webvm_size          = "Standard_B1s"         # Web Server VM SKU (reduced for testing)
+webvm_count         = "1"                    # Number of Web VMs (reduced for testing)
+webvm_osdisk        = 32                     # OS Disk Size (in GB)
+dbsku               = "B_Standard_B1s"       # Azure MySQL Flexible Server SKU (cheapest burstable)
 dbsize              = 20                     # Database storage (in GB)
 netapp_volume_sku   = "Standard"
 storage_quota_in_gb = 100 # NetApp Volume quota (in GB)
@@ -36,3 +36,11 @@ prod_vnet_space  = ["10.0.1.0/24"]
 prod_snet_web    = ["10.0.1.0/26"]
 prod_snet_db     = ["10.0.1.64/26"]
 prod_snet_netapp = ["10.0.1.128/26"]
+
+# ## Production-Grade Hardening (Set to true/Standard for production)
+db_ha_enabled            = false
+storage_replication_type = "LRS"
+waf_enabled              = false
+logging_enabled          = false
+backup_enabled           = false
+acr_sku                  = "Basic"

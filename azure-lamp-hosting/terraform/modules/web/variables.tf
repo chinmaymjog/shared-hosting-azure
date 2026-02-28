@@ -117,3 +117,11 @@ variable "dns_zone_id" {
 variable "key_vault_id" {
   description = "Key Vault id"
 }
+
+variable "db_ha_enabled" {
+  description = "Enable HA for MySQL"
+}
+
+variable "backup_enabled" {
+  description = "Enable VM Backup"
+}

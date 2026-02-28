@@ -17,6 +17,10 @@ module "hub" {
   netapp_sku            = var.netapp_sku
   netapp_pool_size_intb = var.netapp_pool_size_intb
   file_share_quota      = var.file_share_quota
+  storage_replication_type = var.storage_replication_type
+  waf_enabled              = var.waf_enabled
+  logging_enabled          = var.logging_enabled
+  acr_sku                  = var.acr_sku
 }
 
 module "preprod-web" {
@@ -56,6 +60,8 @@ module "preprod-web" {
   dns_zone_id         = module.hub.dns_zone_id
   key_vault_id        = module.hub.key_vault_id
 
+  db_ha_enabled       = var.db_ha_enabled
+  backup_enabled      = var.backup_enabled
 }
 
 module "prod-web" {
@@ -94,4 +100,7 @@ module "prod-web" {
   dns_zone_name       = module.hub.dns_zone_name
   dns_zone_id         = module.hub.dns_zone_id
   key_vault_id        = module.hub.key_vault_id
+
+  db_ha_enabled       = var.db_ha_enabled
+  backup_enabled      = var.backup_enabled
 }

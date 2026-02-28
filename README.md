@@ -1,10 +1,16 @@
-# Shared Hosting on Azure
+# 🏗️ Shared Hosting on Azure
 
-This project is an Infrastructure-as-Code (IaC) and Configuration Management solution designed to deploy and manage a secure, high-availability Shared Web Hosting platform on Microsoft Azure.
+> **Enterprise-grade LAMP stack hosting on Microsoft Azure.**
 
-It is split into two logical components:
-1. **Infrastructure Provisioning (`azure-lamp-hosting/`)**: Uses **Terraform** to provision the networking, virtual machines, databases, object storage, and security layers.
-2. **Configuration Management (`ansible-control-plane/`)**: Uses **Ansible Semaphore** running on the Bastion VM to manage Apache, PHP, databases, certificates, and backups for the web servers.
+This repository provides an Infrastructure-as-Code (IaC) and Configuration Management solution designed to deploy and manage a secure, high-availability Shared Web Hosting platform.
+
+## 🔗 Project Ecosystem Navigation
+
+This project is part of a broader Azure automation suite:
+* **Infrastructure Layer**: [azure-wp-stack-infrastructure](https://github.com/chinmaymjog/aks-cluster-setup) - AKS & Hub-Spoke Foundation.
+* **Shared Hosting Layer** (You are here): Terraform & Ansible for high-density Web VMs.
+
+---
 
 ## Architecture Overview
 
@@ -41,60 +47,55 @@ graph TD
     Bastion -->|Ansible Playbooks| WebPPRD
 ```
 
-## Prerequisites
+## 🏁 Phase 1: Infrastructure Deployment (Terraform)
 
-Before deploying the environment, ensure you have the following installed locally:
-- [Terraform CLI](https://developer.hashicorp.com/terraform/downloads) (> v1.0.0)
-- [Git](https://git-scm.com/downloads)
-- An active Microsoft Azure Subscription.
+The `deploy.sh` script automates the complex parts of the deployment: creating the remote state storage, generating SSH keys, and managing firewall rules.
 
-You must also have an **Azure Service Principal** configured with the `Contributor` role scoped to your subscription. You need these four resulting values:
-- `ARM_CLIENT_ID`
-- `ARM_CLIENT_SECRET`
-- `ARM_SUBSCRIPTION_ID`
-- `ARM_TENANT_ID`
+### 1. Prerequisites
+- **Terraform** (v1.3.x+)
+- **Azure CLI** (v2.x)
+- **Service Principal**: An SP with `Contributor` and `User Access Administrator` roles.
+- **SSH Keys**: The script requires `webadmin_rsa` keys in `azure-lamp-hosting/terraform/`. If missing, `./deploy.sh` will **automatically generate them** for you.
 
----
+### 2. Configure Credentials
+Create a `.env` file in the root directory (git-ignored). This is used by `deploy.sh` for local execution.
+```bash
+export ARM_CLIENT_ID="<your-app-id>"
+export ARM_CLIENT_SECRET="<your-password>"
+export ARM_TENANT_ID="<your-tenant-id>"
+export ARM_SUBSCRIPTION_ID="<your-subscription-id>"
+```
+*Note: If you are using GitHub Actions, configure these as Repository Secrets.*
 
-## Phase 1: Deploy Infrastructure (Terraform)
+### 3. Project Configuration
+Customize your deployment settings in **`azure-lamp-hosting/terraform/terraform.tfvars`**:
+- **`project`**: Your unique project name.
+- **`location`**: The Azure region (defaults to `westeurope`).
+- **⚠️ Scaling**: The default values are set to minimal tiers. See [Phase 3](#-phase-3-production-hardening--scaling) before deploying if you need production-grade specs.
 
-This project contains convenient shell scripts to streamline Terraform execution depending on where you are running it.
+### 4. Deploy Infrastructure
+Run the following command to provision the base networking, VMs, and databases:
+```bash
+./deploy.sh apply
+```
 
-### Local Execution (Manual)
-End-users cloning this repository should use the simplified `./deploy.sh` script. This executes standard `terraform init` and manages your **Terraform State File (`.terraform.tfstate`) locally** on your machine.
+> [!TIP]
+> **State Management**: On the first run, the script creates a dedicated Resource Group (`rg-tfstate-*`) and Storage Account to host your Terraform remote state. This ensures your deployment is stable and portable across team members.
 
-1. Clone this repository to your local machine:
-   ```bash
-   git clone https://github.com/chinmaymjog/shared-hosting-azure.git
-   cd shared-hosting-azure
-   ```
-2. Create a `.env` file at the root of the project to inject your credentials:
-   ```env
-   ARM_CLIENT_ID="your-client-id"
-   ARM_CLIENT_SECRET="your-client-secret"
-   ARM_TENANT_ID="your-tenant-id"
-   ARM_SUBSCRIPTION_ID="your-subscription-id"
-   ```
-3. (Optional) Review and edit `azure-lamp-hosting/terraform/terraform.tfvars` to customize VM sizes, regions, and environment codes. *Always leave standard configurations unless specifically overriding default behaviors.*
-4. Deploy the infrastructure:
-   ```bash
-   ./deploy.sh apply
-   ```
+### 5. Verify Deployment
+Once Terraform finishes, it will output the **Bastion VM Public IP**. Keep this IP handy; you will need it for the next phase.
 
-> ⚠️ **State Management Warning:** Because local execution strictly stores the Terraform state file on your hard drive, losing or deleting this `azure-lamp-hosting/terraform/` state file will result in Terraform forgetting it owns the Azure infrastructure. Running `./deploy.sh apply` again without the original state file will cause Azure to throw `Resource already exists` errors. Ensure you do not delete your local state folder while testing! If you encounter this error on discarded architecture, manually delete the Resource Groups in the Azure Portal to start fresh.
+To verify basic connectivity:
+```bash
+# Replace with the IP from your Terraform output
+ping <BASTION_PUBLIC_IP>
+```
 
-### Automated Execution (GitLab CI/CD - Maintainers Only)
-> **Note:** The included `.gitlab-ci.yml` uses a dedicated `./deploy-ci.sh` script designed for automation. 
-
-Unlike the local script, `deploy-ci.sh` dynamically detects the runner's IP to bypass Azure network firewalls, and automatically injects a **Centralized Terraform Backend**. This means the CI pipeline securely centralizes the state file in the GitLab repository under *Operate > Terraform states*, guaranteeing the runner never accidentally loses track of the deployed infrastructure between jobs.
-
-*Maintainers Required Variables:*
-- `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID` (Azure Credentials)
-- `SSH_PRIVATE_KEY` and `SSH_PUBLIC_KEY` (The webadmin_rsa keys injected into the Bastion and authorized on the VMs).
+Proceed to **[Phase 2: Configuration Management](#️-phase-2-configuration-management-semaphore)** to deploy the software stack!
 
 ---
 
-## Phase 2: Configuration Management (Semaphore)
+## ⚙️ Phase 2: Configuration Management (Semaphore)
 
 Once Terraform finishes, Azure will output the public IP of the **Bastion VM**. 
 The Bastion VM has automatically installed Docker and is ready to host **Ansible Semaphore** (Control Plane).
@@ -108,13 +109,12 @@ The Bastion VM has automatically installed Docker and is ready to host **Ansible
    ```bash
    mkdir -p semaphore && cd semaphore
    curl -O https://raw.githubusercontent.com/chinmaymjog/shared-hosting-azure/develop/ansible-control-plane/docker-compose.yml
-   curl -O https://raw.githubusercontent.com/chinmaymjog/shared-hosting-azure/develop/ansible-control-plane/Makefile
    curl -O https://raw.githubusercontent.com/chinmaymjog/shared-hosting-azure/develop/ansible-control-plane/Dockerfile
    ```
 
 3. Deploy the Semaphore stack:
    ```bash
-   make deploy
+   docker compose up -d
    ```
 
 4. **Access Semaphore:**
@@ -165,7 +165,24 @@ Click the **Run** button on your template. Semaphore will pull the latest code f
 
 ---
 
-## Destruction (Teardown)
+## 🚀 Phase 3: Production Hardening & Scaling
+
+You can enable production features **before your first deployment** or **any time after** by updating `azure-lamp-hosting/terraform/terraform.tfvars`.
+
+> [!NOTE]
+> **Cost-Effective Testing Defaults:** The default configuration uses `Standard_B2ms` VMs and Burstable databases to minimize costs during evaluation.
+
+For a true production-grade environment, follow the **[Production Hardening Guide](./documentation/4-Production-Hardening.md)**:
+
+- **Compute Sizing**: Upgrade `web_vm_size` to `Standard_D4s_v5` and increase `web_instance_count` to at least 2 for High Availability.
+- **Database Scaling**: Switch `db_sku_name` from `B_Standard_B1ms` to a General Purpose tier (e.g., `GP_Standard_D2ds_v4`) to support production workloads.
+- **Security & WAF**: Enable **Azure Front Door Premium** with WAF policies (configured in the `frontdoor` module) to protect against common web attacks.
+- **Storage Performance**: Use **Azure NetApp Files** (already included) but ensure you scale the capacity pool according to your storage throughput requirements.
+- **Backups**: Ensure `backup_retention_days` is set to at least 7-30 days for both Database and VM snapshots.
+
+---
+
+## 🧹 Destruction (Teardown)
 
 Since these Azure resources (specifically Front Door, NetApp Files, and Application Gateways) incur costs continuously, you should destroy the infrastructure when you are done testing.
 
@@ -173,7 +190,20 @@ Run:
 ```bash
 ./deploy.sh destroy
 ```
-*(Or use the manual trigger under pipelines in GitLab CI).*
+
+### 🏁 Phase 1: Infrastructure Deployment (GitHub Actions)
+This repository includes a workflow in `.github/workflows/deploy.yml` to automatically test and deploy your Terraform code using **GitHub Actions**.
+
+To use the workflow:
+1.  **Fork this repository** to your own GitHub account.
+2.  **Configure Secrets**: Add your Azure credentials as GitHub Repository Secrets:
+    - `ARM_CLIENT_ID`
+    - `ARM_CLIENT_SECRET`
+    - `ARM_TENANT_ID`
+    - `ARM_SUBSCRIPTION_ID`
+3.  **Trigger**:
+    - The workflow triggers a **`plan`** automatically on any push to `main` that affects terraform files.
+    - You can manually trigger an **`apply`** or **`plan`** via the **Actions** tab using the `workflow_dispatch` event.
 
 ---
 ## Further Reading

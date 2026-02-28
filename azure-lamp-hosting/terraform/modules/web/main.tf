@@ -350,6 +350,13 @@ resource "azurerm_mysql_flexible_server" "mysql" {
     size_gb = var.dbsize
   }
 
+  dynamic "high_availability" {
+    for_each = var.db_ha_enabled ? [1] : []
+    content {
+      mode = "ZoneRedundant"
+    }
+  }
+
   depends_on = [
     azurerm_private_dns_zone_virtual_network_link.vnet-link,
     azurerm_virtual_network_peering.hub,
@@ -368,4 +375,40 @@ resource "azurerm_key_vault_secret" "dbpass" {
   name         = "${var.e_short}-dbpass"
   value        = random_password.dbadminpassword.result
   key_vault_id = var.key_vault_id
+}
+
+### Backup & Recovery (Production Grade)
+resource "azurerm_recovery_services_vault" "vault" {
+  count               = var.backup_enabled ? 1 : 0
+  name                = "rsv-${var.p_short}-${var.e_short}-${var.l_short}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "Standard"
+  soft_delete_enabled = true
+}
+
+resource "azurerm_backup_policy_vm" "policy" {
+  count               = var.backup_enabled ? 1 : 0
+  name                = "policy-${var.p_short}-${var.e_short}-${var.l_short}"
+  resource_group_name = azurerm_resource_group.rg.name
+  recovery_vault_name = azurerm_recovery_services_vault.vault[0].name
+
+  timezone = "UTC"
+
+  backup {
+    frequency = "Daily"
+    time      = "23:00"
+  }
+
+  retention_daily {
+    count = 7
+  }
+}
+
+resource "azurerm_backup_protected_vm" "backup" {
+  count               = var.backup_enabled ? var.webvm_count : 0
+  resource_group_name = azurerm_resource_group.rg.name
+  recovery_vault_name = azurerm_recovery_services_vault.vault[0].name
+  source_vm_id        = azurerm_linux_virtual_machine.web[count.index].id
+  backup_policy_id    = azurerm_backup_policy_vm.policy[0].id
 }

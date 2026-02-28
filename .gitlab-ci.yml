@@ -16,7 +16,7 @@ stages:
 before_script:
   - apk add --no-cache bash curl python3 py3-pip
   - pip3 install --no-cache-dir azure-cli --break-system-packages
-  - chmod +x deploy-ci.sh
+  - chmod +x deploy.sh
   - echo "Injecting SSH keys from CI/CD variables..."
   - echo "$SSH_PRIVATE_KEY" > azure-lamp-hosting/terraform/webadmin_rsa
   - echo "$SSH_PUBLIC_KEY" > azure-lamp-hosting/terraform/webadmin_rsa.pub
@@ -29,7 +29,7 @@ plan_infrastructure:
   stage: plan
   script:
     - echo "Executing plan script via CI/CD..."
-    - ./deploy-ci.sh plan
+    - ./deploy.sh plan
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
 
@@ -40,7 +40,7 @@ deploy_infrastructure:
   stage: deploy
   script:
     - echo "Executing deploy script via CI/CD..."
-    - ./deploy-ci.sh apply
+    - ./deploy.sh apply
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
       when: manual
@@ -53,13 +53,10 @@ destroy_infrastructure:
   stage: destroy
   script:
     - echo "Executing destroy script via CI/CD..."
-    - ./deploy-ci.sh destroy
+    - ./deploy.sh destroy
   rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
-      when: manual
-      allow_failure: true
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "schedule"'
       when: always
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "web"'
       when: manual
       allow_failure: true
